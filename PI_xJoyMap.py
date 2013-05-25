@@ -249,11 +249,12 @@ class JoyAxisAssign:
               
     http://www.xsquawkbox.net/xpsdk/docs/DataRefs.html list of datarefs
     """
-    def __init__(self, plugin, axis, dataref, dr_range, dr_type = "int", release = 1, dr_round = 0):
+    def __init__(self, plugin, axis, dataref, dr_range, dr_type = "int", release = 1, reverse = 0, dr_round = 0):
         self.plugin = plugin
         self.axis = int(axis)
         self.dr_range = int(dr_range)
         self.dr_type = dr_type
+        self.reverse = int(reverse)
         self.release = int(release)
         if (self.dr_range < 0): # Enable negative ranges
             self.negative = True
@@ -276,7 +277,11 @@ class JoyAxisAssign:
     # called from the main flightloop
     def updateLoop(self, axis):
 
-        current_joy_value = self.get_current_joy(axis[self.axis])
+        if (self.reverse == 1):
+            current_joy_value = 1.0 - self.get_current_joy(axis[self.axis])
+        else:
+            current_joy_value = self.get_current_joy(axis[self.axis])
+        
         current_dr_value = self.dataref.value
     
         if (self.old_dr_value == -1):
@@ -531,7 +536,7 @@ class PythonInterface:
 
     def config(self, startup = False):
         # Defaults
-        defaults = {'type':"int", 'release':1, 'negative': 0, 'shift': 0, 'round': 0, 'shifted_command': False, \
+        defaults = {'type':"int", 'release':1, 'negative': 0, 'shift': 0, 'reverse': 0, 'round': 0, 'shifted_command': False, \
                     'values': False, 'increment' : False, 'description': '', 'override': False, 'repeat': False, 'loop': 'True'}
         
         config = ConfigParser.RawConfigParser()
@@ -577,7 +582,7 @@ class PythonInterface:
             if  (xjm.CheckParams(['axis', 'dataref', 'range'], conf)):
                 self.axis.append(JoyAxisAssign(self, int(conf['axis']), \
                 conf['dataref'], conf['range'], conf['type'], conf['release'], \
-                conf['round']))
+                conf['reverse'], conf['round']))
             # JoySwitch
             elif (xjm.CheckParams(['new_command', 'on_value', 'off_value', 'dataref'], conf)):
                 self.buttons.append(JoySwitch(self, conf['new_command'], conf['description'], conf['dataref'], conf['type'], conf['on_value'], conf['off_value']))
